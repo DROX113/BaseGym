@@ -245,9 +245,11 @@ def clases():
     flash('Funcionalidad en desarrollo - Base de datos en configuración', 'info')
     return redirect(url_for('dashboard'))
 
-# ================== EJECUCIÓN ==================
-# Railway ejecuta automáticamente la aplicación con gunicorn
-# No se necesita el bloque if __name__ == '__main__'
-
-print("🎉 ¡Aplicación lista y funcionando!")
-print("🌐 Tu sistema de gimnasio está operativo")
+# ================== EJECUCIÓN PARA RAILWAY ==================
+if __name__ == '__main__':
+    # Solo ejecutar con Flask en desarrollo local
+    print("🚀 Ejecutando en modo desarrollo...")
+    app.run(host='0.0.0.0', port=5000, debug=True)
+else:
+    # En producción, Railway usa gunicorn automáticamente
+    print("🎉 Aplicación lista para producción")
