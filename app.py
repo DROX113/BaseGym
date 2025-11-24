@@ -26,7 +26,7 @@ def get_db_connection():
     except Error as e:
         print(f"❌ Error conectando a MySQL: {e}")
         return None
-        
+
 # --- INICIALIZACIÓN AUTOMÁTICA DE BD ---
 def init_database():
     try:
@@ -62,6 +62,8 @@ def init_database():
                 
                 conn.commit()
                 print("✅ Base de datos inicializada correctamente")
+            else:
+                print("✅ Base de datos ya está inicializada")
             
             cursor.close()
             conn.close()
@@ -71,19 +73,6 @@ def init_database():
 
 # Llamar la función al inicio
 init_database()
-
-    try:
-        conn = mysql.connector.connect(
-            host=os.getenv('MYSQL_HOST', 'localhost'),
-            user=os.getenv('MYSQL_USER', 'root'),
-            password=os.getenv('MYSQL_PASSWORD', ''),
-            database=os.getenv('MYSQL_DB', 'gimnasio_db'),
-            port=int(os.getenv('MYSQL_PORT', '3306'))
-        )
-        return conn
-    except Error as e:
-        print(f"❌ Error conectando a MySQL: {e}")
-        return None
 
 # --- DECORADORES ---
 def login_required(f):
