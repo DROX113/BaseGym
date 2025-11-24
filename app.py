@@ -246,13 +246,11 @@ def clases():
     return redirect(url_for('dashboard'))
 
 # ================== EJECUCIÓN ==================
-if __name__ == '__main__':
-    # Verificar si está en producción o desarrollo
-    if 'RENDER' in os.environ or 'RAILWAY' in os.environ:
-        # ✅ CONFIGURACIÓN PARA PRODUCCIÓN
-        port = int(os.environ.get('PORT', 5000))
-        print(f'✅ Iniciando servidor en modo producción - Puerto: {port}')
-        app.run(host='0.0.0.0', port=port, debug=False)
+# if __name__ == '__main__':
+    # SIEMPRE usar el puerto de Railway/Render
+    port = int(os.environ.get('PORT', 5000))
+    print(f'🚀 Iniciando servidor en puerto: {port}')
+    app.run(host='0.0.0.0', port=port, debug=False)
     else:
         # ■ CONFIGURACIÓN PARA DESARROLLO LOCAL
         print("=" * 60)
