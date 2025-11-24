@@ -246,7 +246,7 @@ def clases():
     return redirect(url_for('dashboard'))
 
 # ================== EJECUCIÓN ==================
-# if __name__ == '__main__':
+if __name__ == '__main__':
     # SIEMPRE usar el puerto de Railway/Render
     port = int(os.environ.get('PORT', 5000))
     print(f'🚀 Iniciando servidor en puerto: {port}')
