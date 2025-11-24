@@ -246,21 +246,8 @@ def clases():
     return redirect(url_for('dashboard'))
 
 # ================== EJECUCIÓN ==================
-if __name__ == '__main__':
-    # SIEMPRE usar el puerto de Railway/Render
-    port = int(os.environ.get('PORT', 5000))
-    print(f'🚀 Iniciando servidor en puerto: {port}')
-    app.run(host='0.0.0.0', port=port, debug=False)
-    else:
-        # ■ CONFIGURACIÓN PARA DESARROLLO LOCAL
-        print("=" * 60)
-        print("🏋️  Sistema de Gimnasio - VERSIÓN CORREGIDA")
-        print("=" * 60)
-        print("👤 Usuarios de prueba:")
-        print("🔑 admin / contraseña: password123 (Control total)")
-        print("🔑 responsable1 / contraseña: password123 (Gestión)")
-        print("🔑 usuario1 / contraseña: password123 (Solo consultas)")
-        print("=" * 60)
-        print("🌐 Abre tu navegador y ve a: http://localhost:5000")
-        print("=" * 60)
-        app.run(debug=True, host='0.0.0.0', port=5000)
+# Railway ejecuta automáticamente la aplicación con gunicorn
+# No se necesita el bloque if __name__ == '__main__'
+
+print("🎉 ¡Aplicación lista y funcionando!")
+print("🌐 Tu sistema de gimnasio está operativo")
