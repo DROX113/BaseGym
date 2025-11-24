@@ -26,6 +26,64 @@ def get_db_connection():
     except Error as e:
         print(f"❌ Error conectando a MySQL: {e}")
         return None
+        
+# --- INICIALIZACIÓN AUTOMÁTICA DE BD ---
+def init_database():
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+            
+            # Verificar si la tabla usuarios existe
+            cursor.execute("SHOW TABLES LIKE 'usuarios'")
+            if not cursor.fetchone():
+                print("📦 Creando estructura de base de datos...")
+                
+                # Crear tabla usuarios
+                cursor.execute("""
+                    CREATE TABLE usuarios (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        username VARCHAR(50) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        rol ENUM('admin', 'responsable', 'usuario') NOT NULL,
+                        nombre VARCHAR(100) NOT NULL,
+                        email VARCHAR(100),
+                        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        activo BOOLEAN DEFAULT TRUE
+                    )
+                """)
+                
+                # Insertar usuario admin
+                hashed_pwd = bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                cursor.execute(
+                    "INSERT INTO usuarios (username, password, rol, nombre, email) VALUES (%s, %s, %s, %s, %s)",
+                    ('admin', hashed_pwd, 'admin', 'Administrador', 'admin@gimnasio.com')
+                )
+                
+                conn.commit()
+                print("✅ Base de datos inicializada correctamente")
+            
+            cursor.close()
+            conn.close()
+            
+    except Exception as e:
+        print(f"❌ Error inicializando BD: {e}")
+
+# Llamar la función al inicio
+init_database()
+
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv('MYSQL_HOST', 'localhost'),
+            user=os.getenv('MYSQL_USER', 'root'),
+            password=os.getenv('MYSQL_PASSWORD', ''),
+            database=os.getenv('MYSQL_DB', 'gimnasio_db'),
+            port=int(os.getenv('MYSQL_PORT', '3306'))
+        )
+        return conn
+    except Error as e:
+        print(f"❌ Error conectando a MySQL: {e}")
+        return None
 
 # --- DECORADORES ---
 def login_required(f):
