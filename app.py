@@ -21,52 +21,91 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
-# --- INICIALIZACIÓN DE BASE DE DATOS ---
+# --- INICIALIZACIÓN DE BASE DE DATOS MEJORADA ---
 def init_database():
-    try:
-        print("🔧 Verificando estructura de la base de datos...")
-        cur = mysql.connection.cursor()
-        
-        # Verificar si la tabla usuarios existe
-        cur.execute("SHOW TABLES LIKE 'usuarios'")
-        if not cur.fetchone():
-            print("📦 Creando tablas...")
-            # Ejecutar setup manualmente
-            cursor = mysql.connection.cursor()
+    import time
+    max_retries = 5
+    retry_delay = 5  # segundos
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"🔧 Intentando conectar a la BD (intento {attempt + 1}/{max_retries})...")
+            cur = mysql.connection.cursor()
             
-            # Crear tabla usuarios
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    username VARCHAR(50) UNIQUE NOT NULL,
-                    password VARCHAR(255) NOT NULL,
-                    rol ENUM('admin', 'responsable', 'usuario') NOT NULL,
-                    nombre VARCHAR(100) NOT NULL,
-                    email VARCHAR(100),
-                    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    activo BOOLEAN DEFAULT TRUE
-                )
-            """)
-            
-            # Insertar usuario admin por defecto
-            import bcrypt
-            hashed_pwd = bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            cursor.execute("INSERT IGNORE INTO usuarios (username, password, rol, nombre, email) VALUES (%s, %s, %s, %s, %s)", 
+            # Verificar si la tabla usuarios existe
+            cur.execute("SHOW TABLES LIKE 'usuarios'")
+            if not cur.fetchone():
+                print("📦 Creando estructura inicial...")
+                
+                # Crear tabla usuarios
+                cur.execute("""
+                    CREATE TABLE usuarios (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        username VARCHAR(50) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        rol ENUM('admin', 'responsable', 'usuario') NOT NULL,
+                        nombre VARCHAR(100) NOT NULL,
+                        email VARCHAR(100),
+                        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        activo BOOLEAN DEFAULT TRUE
+                    )
+                """)
+                
+                # Crear tabla miembros
+                cur.execute("""
+                    CREATE TABLE miembros (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        codigo_miembro VARCHAR(20) UNIQUE NOT NULL,
+                        nombre VARCHAR(100) NOT NULL,
+                        apellido VARCHAR(100) NOT NULL,
+                        email VARCHAR(100),
+                        telefono VARCHAR(15),
+                        fecha_nacimiento DATE,
+                        direccion TEXT,
+                        fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        activo BOOLEAN DEFAULT TRUE
+                    )
+                """)
+                
+                # Insertar usuario admin
+                import bcrypt
+                hashed_pwd = bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                cur.execute("INSERT IGNORE INTO usuarios (username, password, rol, nombre, email) VALUES (%s, %s, %s, %s, %s)", 
                           ('admin', hashed_pwd, 'admin', 'Administrador', 'admin@gimnasio.com'))
+                
+                mysql.connection.commit()
+                print("✅ Base de datos inicializada exitosamente")
+            else:
+                print("✅ Base de datos ya está inicializada")
             
-            mysql.connection.commit()
-            cursor.close()
-            print("✅ Base de datos inicializada correctamente")
-        else:
-            print("✅ Base de datos ya está inicializada")
+            cur.close()
+            return True
             
-        cur.close()
-    except Exception as e:
-        print(f"❌ Error en init_database: {e}")
+        except Exception as e:
+            print(f"❌ Intento {attempt + 1} falló: {e}")
+            if attempt < max_retries - 1:
+                print(f"⏳ Reintentando en {retry_delay} segundos...")
+                time.sleep(retry_delay)
+            else:
+                print("🚨 Todos los intentos fallaron")
+                return False
 
-# Ejecutar al inicio
-with app.app_context():
-    init_database()
+# Ejecutar de forma segura
+def safe_init():
+    try:
+        with app.app_context():
+            init_database()
+    except Exception as e:
+        print(f"⚠️ Init seguro falló: {e}")
+
+# Llamar de forma asíncrona después de 10 segundos
+import threading
+def delayed_init():
+    time.sleep(10)
+    safe_init()
+
+# Iniciar en segundo plano
+threading.Thread(target=delayed_init, daemon=True).start()
 
 # ========== DECORADORES ==========
 def login_required(f):
