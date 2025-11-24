@@ -21,6 +21,53 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
+# --- INICIALIZACIÓN DE BASE DE DATOS ---
+def init_database():
+    try:
+        print("🔧 Verificando estructura de la base de datos...")
+        cur = mysql.connection.cursor()
+        
+        # Verificar si la tabla usuarios existe
+        cur.execute("SHOW TABLES LIKE 'usuarios'")
+        if not cur.fetchone():
+            print("📦 Creando tablas...")
+            # Ejecutar setup manualmente
+            cursor = mysql.connection.cursor()
+            
+            # Crear tabla usuarios
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS usuarios (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    rol ENUM('admin', 'responsable', 'usuario') NOT NULL,
+                    nombre VARCHAR(100) NOT NULL,
+                    email VARCHAR(100),
+                    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    activo BOOLEAN DEFAULT TRUE
+                )
+            """)
+            
+            # Insertar usuario admin por defecto
+            import bcrypt
+            hashed_pwd = bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            cursor.execute("INSERT IGNORE INTO usuarios (username, password, rol, nombre, email) VALUES (%s, %s, %s, %s, %s)", 
+                          ('admin', hashed_pwd, 'admin', 'Administrador', 'admin@gimnasio.com'))
+            
+            mysql.connection.commit()
+            cursor.close()
+            print("✅ Base de datos inicializada correctamente")
+        else:
+            print("✅ Base de datos ya está inicializada")
+            
+        cur.close()
+    except Exception as e:
+        print(f"❌ Error en init_database: {e}")
+
+# Ejecutar al inicio
+with app.app_context():
+    init_database()
+
 # ========== DECORADORES ==========
 def login_required(f):
     @wraps(f)
