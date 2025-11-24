@@ -16,15 +16,16 @@ app.secret_key = os.getenv('SECRET_KEY', 'clave-secreta-gimnasio')
 def get_db_connection():
     try:
         conn = mysql.connector.connect(
-            host=os.getenv('MYSQL_HOST', 'localhost'),
-            user=os.getenv('MYSQL_USER', 'root'),
-            password=os.getenv('MYSQL_PASSWORD', ''),
-            database=os.getenv('MYSQL_DB', 'gimnasio_db'),
-            port=int(os.getenv('MYSQL_PORT', '3306'))
+            host=os.getenv('MYSQLHOST'),  # ← SIN valor por defecto
+            user=os.getenv('MYSQLUSER'),  # ← SIN valor por defecto
+            password=os.getenv('MYSQLPASSWORD'),  # ← SIN valor por defecto
+            database='railway',  # ← Valor directo
+            port=int(os.getenv('MYSQLPORT', '3306'))
         )
         return conn
     except Error as e:
         print(f"❌ Error conectando a MySQL: {e}")
+        print(f"🔍 Variables: HOST={os.getenv('MYSQLHOST')}, USER={os.getenv('MYSQLUSER')}")
         return None
 
 # --- INICIALIZACIÓN AUTOMÁTICA DE BD ---
